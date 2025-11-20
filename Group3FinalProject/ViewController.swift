@@ -21,15 +21,35 @@ class ViewController: UIViewController {
                       currency(code: "EUR", name: "Euro", rate: 0.86),
                       currency(code: "GBP", name: "Pound Sterling", rate: 0.76),]
     var chosenCurrency: Int = 0
+    var finalResult: String?
     
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var resultLabel: UILabel!
     @IBOutlet weak var usdText: UITextField!
     
+    func showAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+    
     @IBAction func convert(_ sender: Any) {
+        
+        guard let text = usdText.text, !text.isEmpty else {
+                showAlert(title: "Missing Input", message: "Please enter an amount to convert.")
+                finalResult = nil
+                return
+            }
+        
         if let amount = Double(usdText.text ?? "") {
             let result = amount * currencies[chosenCurrency].rate
             resultLabel.text = "USD to \(currencies[chosenCurrency].code) = \(String(format: "%.2f", result))"
+            let resultString = "USD to \(currencies[chosenCurrency].code) = \(String(format: "%.2f", result))"
+
+            // store result so we can pass it during prepare(for:segue:)
+            self.finalResult = resultString
+
+            performSegue(withIdentifier: "showResult", sender: nil)
         }
     }
     override func viewDidLoad() {
@@ -37,7 +57,21 @@ class ViewController: UIViewController {
         // Do any additional setup after loading the view.
         // edit
     }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
 
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+        }
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "showResult" {
+            if let dest = segue.destination as? ConvertViewController {
+                dest.resultText = finalResult
+            }
+        }
+    }
 
 }
 
